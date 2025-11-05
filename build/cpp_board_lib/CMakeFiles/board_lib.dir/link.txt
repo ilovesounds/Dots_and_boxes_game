@@ -1,0 +1,2 @@
+C:\MinGW\bin\ar.exe qc libboard_lib.a CMakeFiles/board_lib.dir/src/lib/board.cpp.obj CMakeFiles/board_lib.dir/src/lib/utils.cpp.obj
+C:\MinGW\bin\ranlib.exe libboard_lib.a

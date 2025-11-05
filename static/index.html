@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dots and Boxes - WebGL</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .setup-container {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .player-setup {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        select,
+        input {
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: #3a3a3a;
+            color: #fff;
+        }
+
+        input[type="number"] {
+            width: 60px;
+            /* Give number inputs a reasonable width */
+        }
+
+        .start-button {
+            padding: 10px 20px !important;
+            background: #4CAF50 !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 4px !important;
+            cursor: pointer !important;
+            font-size: 16px !important;
+        }
+
+        .start-button:hover {
+            background: #45a049 !important;
+            transform: none !important;
+        }
+
+        #canvas-container {
+            position: relative;
+            margin: 20px 0;
+        }
+
+        canvas {
+            border: 2px solid #444;
+            cursor: pointer;
+            display: block;
+        }
+
+        .scores {
+            display: flex;
+            gap: 30px;
+            margin: 20px 0;
+            font-size: 20px;
+        }
+
+        .player-score {
+            padding: 10px 20px;
+            border-radius: 8px;
+            background: #2a2a2a;
+        }
+
+        .player1 {
+            border-left: 4px solid #ff0000;
+        }
+
+        .player2 {
+            border-left: 4px solid #00ff00;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        button {
+            font-size: 30px;
+            padding: 0;
+            border: none;
+            background: none;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+
+        button:hover:not(:disabled) {
+            transform: scale(1.2);
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .move-time {
+            margin-top: 10px;
+            font-size: 18px;
+            color: #aaa;
+        }
+
+        #speed-slider {
+            width: 150px;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: #4caf50;
+            transition: width 0.3s;
+        }
+
+        #progress-container {
+            width: 40%;
+            background: #ddd;
+            height: 15px;
+            margin-top: 10px;
+            display: none;
+            /* <-- Hides the progress bar initially */
+        }
+
+        .toggle {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            background: #ccc;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle::after {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .active {
+            background: #4caf50;
+        }
+
+        .active::after {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Dots and Boxes Game Board (WebGL)</h1>
+
+    <div id="setup-controls" class="setup-container">
+        <div class="player-setup">
+            <label for="player1-type">Player 1 (Red):</label>
+            <select id="player1-type">
+                <option value="">Loading...</option>
+            </select>
+        </div>
+        <div class="player-setup">
+            <label for="player2-type">Player 2 (Green):</label>
+            <select id="player2-type">
+                <option value="">Loading...</option>
+            </select>
+        </div>
+
+        <label for="board-rows">Board Rows:</label>
+        <input type="number" id="board-rows" value="10" max="100" min="1" step="1" placeholder="Rows" />
+        <label for="board-cols">Board Cols:</label>
+        <input type="number" id="board-cols" value="10" max="100" min="1" step="1" placeholder="Cols" />
+        <label for="toggle">Random:</label>
+        <div id="toggle" class="toggle"></div>
+        <button id="start-btn" class="start-button">Start Game</button>
+    </div>
+    <div id="progress-container">
+        <div id="progress-bar"></div>
+    </div>
+    <div id="gamePlay" style="width: 100%; display: none; flex-direction: column; align-items: center;">
+        <div id="canvas-container">
+            <canvas id="game-canvas"></canvas>
+        </div>
+
+        <div class="scores">
+            <div class="player-score player1" id="player1-score">Player 1 (Red): 0</div>
+            <div class="player-score player2" id="player2-score">Player 2 (Green): 0</div>
+        </div>
+
+        <div class="scores">
+            <div class="player-score player1" id="time-1">Time Elapsed: -</div>
+            <div class="player-score player2" id="time-2">Time Elapsed: -</div>
+        </div>
+
+        <div class="controls">
+            <button id="resetReplayBtn">🔄</button>
+            <button id="backPlayBtn">⏪</button>
+            <button id="prevMoveBtn">⏮️</button>
+            <button id="pauseBtn">⏸️</button>
+            <button id="nextMoveBtn">⏭️</button>
+            <button id="forwardPlayBtn">⏩</button>
+            <label for="speed-slider">Playback Speed:</label>
+            <input type="range" id="speed-slider" min="0.25" max="10" step="0.25" value="1">
+            <span id="speed-value">1x</span>
+        </div>
+    </div>
+
+    <script>
+        // Game classes
+        class Move {
+            constructor(row, col, isHorizontal) {
+                this.row = row;
+                this.col = col;
+                this.isHorizontal = isHorizontal;
+                this.playerNum = 0;
+            }
+
+            toString() {
+                return `${this.row} ${this.col} ${this.isHorizontal ? 1 : 0}`;
+            }
+
+            static fromString(str) {
+                const [row, col, isHorizontal] = str.split(' ').map(Number);
+                return new Move(row, col, !!isHorizontal);
+            }
+
+            setPlayer(playerNum) {
+                this.playerNum = playerNum;
+            }
+        }
+
+        class Board {
+            constructor(rows, cols) {
+                this.rows = rows;
+                this.cols = cols;
+                this.horizontalLines = Array.from({ length: rows }, () => Array(cols - 1).fill(0));
+                this.verticalLines = Array.from({ length: rows - 1 }, () => Array(cols).fill(0));
+                this.gridOwner = Array.from({ length: rows - 1 }, () => Array(cols - 1).fill(0));
+                this.scores = { 1: 0, 2: 0 };
+            }
+
+            isValidMove(move) {
+                if (move.isHorizontal) {
+                    if (move.row < 0 || move.row >= this.rows || move.col < 0 || move.col >= this.cols - 1) {
+                        return false;
+                    }
+                    return this.horizontalLines[move.row][move.col] === 0;
+                } else {
+                    if (move.row < 0 || move.row >= this.rows - 1 || move.col < 0 || move.col >= this.cols) {
+                        return false;
+                    }
+                    return this.verticalLines[move.row][move.col] === 0;
+                }
+            }
+
+            makeMove(move, playerNum) {
+                if (!this.isValidMove(move)) {
+                    return false;
+                }
+
+                const capturedGrids = getCapturingGrids(this, move);
+
+                for (const grid of capturedGrids) {
+                    if (this.gridOwner[grid.row][grid.col] === 0) {
+                        this.gridOwner[grid.row][grid.col] = playerNum;
+                        this.scores[playerNum]++;
+                    }
+                }
+
+                if (move.isHorizontal) {
+                    this.horizontalLines[move.row][move.col] = playerNum;
+                } else {
+                    this.verticalLines[move.row][move.col] = playerNum;
+                }
+
+                return true;
+            }
+
+            nextMove(move) {
+                const capturedGrids = getCapturingGrids(this, move);
+
+                for (const grid of capturedGrids) {
+                    if (this.gridOwner[grid.row][grid.col] === 0) {
+                        this.gridOwner[grid.row][grid.col] = move.playerNum;
+                        this.scores[move.playerNum]++;
+                    }
+                }
+
+                if (move.isHorizontal) {
+                    this.horizontalLines[move.row][move.col] = move.playerNum;
+                } else {
+                    this.verticalLines[move.row][move.col] = move.playerNum;
+                }
+            }
+
+            prevMove(move) {
+                const capturedGrids = getCapturingGrids(this, move);
+
+                for (const grid of capturedGrids) {
+                    this.scores[this.gridOwner[grid.row][grid.col]]--;
+                    this.gridOwner[grid.row][grid.col] = 0;
+                }
+
+                if (move.isHorizontal) {
+                    this.horizontalLines[move.row][move.col] = 0;
+                } else {
+                    this.verticalLines[move.row][move.col] = 0;
+                }
+            }
+
+            isCompleted() {
+                let totalGrids = (this.rows - 1) * (this.cols - 1);
+                return (this.scores[1] + this.scores[2]) === totalGrids;
+            }
+
+            fillRandomLines(percentage = 0.1) {
+                const totalLines = (this.rows * (this.cols - 1)) + ((this.rows - 1) * this.cols);
+                const linesToFill = Math.floor(totalLines * percentage);
+                let filledCount = 0;
+                const maxAttempts = linesToFill * 100; // Prevent infinite loops
+                let attempts = 0;
+
+                while (filledCount < linesToFill && attempts < maxAttempts) {
+                    attempts++;
+
+                    // Randomly choose horizontal or vertical
+                    const isHorizontal = Math.random() < 0.5;
+
+                    let row, col;
+
+                    if (isHorizontal) {
+                        row = Math.floor(Math.random() * this.rows);
+                        col = Math.floor(Math.random() * (this.cols - 1));
+
+                        // Skip if already filled
+                        if (this.horizontalLines[row][col] !== 0) continue;
+
+                        // Check if this would complete a square
+                        if (this.wouldCompleteSquare(row, col, true)) continue;
+
+                        // Fill the line
+                        this.horizontalLines[row][col] = 3;
+                        filledCount++;
+                    } else {
+                        row = Math.floor(Math.random() * (this.rows - 1));
+                        col = Math.floor(Math.random() * this.cols);
+
+                        // Skip if already filled
+                        if (this.verticalLines[row][col] !== 0) continue;
+
+                        // Check if this would complete a square
+                        if (this.wouldCompleteSquare(row, col, false)) continue;
+
+                        // Fill the line
+                        this.verticalLines[row][col] = 3;
+                        filledCount++;
+                    }
+                }
+
+                return filledCount;
+            }
+
+            wouldCompleteSquare(row, col, isHorizontal) {
+                if (isHorizontal) {
+                    // Check square above (if exists)
+                    if (row > 0) {
+                        const top = this.horizontalLines[row - 1][col];
+                        const left = this.verticalLines[row - 1][col];
+                        const right = this.verticalLines[row - 1][col + 1];
+                        if (top !== 0 && left !== 0 && right !== 0) return true;
+                    }
+
+                    // Check square below (if exists)
+                    if (row < this.rows - 1) {
+                        const bottom = this.horizontalLines[row + 1][col];
+                        const left = this.verticalLines[row][col];
+                        const right = this.verticalLines[row][col + 1];
+                        if (bottom !== 0 && left !== 0 && right !== 0) return true;
+                    }
+                } else {
+                    // Check square to the left (if exists)
+                    if (col > 0) {
+                        const top = this.horizontalLines[row][col - 1];
+                        const bottom = this.horizontalLines[row + 1][col - 1];
+                        const left = this.verticalLines[row][col - 1];
+                        if (top !== 0 && bottom !== 0 && left !== 0) return true;
+                    }
+
+                    // Check square to the right (if exists)
+                    if (col < this.cols - 1) {
+                        const top = this.horizontalLines[row][col];
+                        const bottom = this.horizontalLines[row + 1][col];
+                        const right = this.verticalLines[row][col + 1];
+                        if (top !== 0 && bottom !== 0 && right !== 0) return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
+        function isCapturingAbove(board, move) {
+            if (move.row > 0 && move.isHorizontal) {
+                return board.verticalLines[move.row - 1][move.col] !== 0 &&
+                    board.verticalLines[move.row - 1][move.col + 1] !== 0 &&
+                    board.horizontalLines[move.row - 1][move.col] !== 0;
+            }
+            return false;
+        }
+
+        function isCapturingBelow(board, move) {
+            if (move.row < board.rows - 1 && move.isHorizontal) {
+                return board.verticalLines[move.row][move.col] !== 0 &&
+                    board.verticalLines[move.row][move.col + 1] !== 0 &&
+                    board.horizontalLines[move.row + 1][move.col] !== 0;
+            }
+            return false;
+        }
+
+        function isCapturingLeft(board, move) {
+            if (move.col > 0 && !move.isHorizontal) {
+                return board.horizontalLines[move.row][move.col - 1] !== 0 &&
+                    board.horizontalLines[move.row + 1][move.col - 1] !== 0 &&
+                    board.verticalLines[move.row][move.col - 1] !== 0;
+            }
+            return false;
+        }
+
+        function isCapturingRight(board, move) {
+            if (move.col < board.cols - 1 && !move.isHorizontal) {
+                return board.horizontalLines[move.row][move.col] !== 0 &&
+                    board.horizontalLines[move.row + 1][move.col] !== 0 &&
+                    board.verticalLines[move.row][move.col + 1] !== 0;
+            }
+            return false;
+        }
+
+        function getCapturingGrids(board, move) {
+            const capturingGrids = [];
+            if (move.isHorizontal) {
+                if (isCapturingAbove(board, move)) {
+                    capturingGrids.push({ row: move.row - 1, col: move.col });
+                }
+                if (isCapturingBelow(board, move)) {
+                    capturingGrids.push({ row: move.row, col: move.col });
+                }
+            } else {
+                if (isCapturingLeft(board, move)) {
+                    capturingGrids.push({ row: move.row, col: move.col - 1 });
+                }
+                if (isCapturingRight(board, move)) {
+                    capturingGrids.push({ row: move.row, col: move.col });
+                }
+            }
+            return capturingGrids;
+        }
+
+        // WebGL Renderer
+        class WebGLRenderer {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+                if (!this.gl) {
+                    alert('WebGL not supported');
+                    return;
+                }
+
+                this.initShaders();
+                this.dotSize = 8;
+                this.lineLength = 60;
+                this.lineThickness = 4;
+                this.spacing = 68;
+
+                // Batch buffers
+                this.maxRects = 1000;
+                this.vertices = new Float32Array(this.maxRects * 12); // 6 vertices * 2 coords
+                this.colors = new Float32Array(this.maxRects * 24); // 6 vertices * 4 color components
+                this.rectCount = 0;
+            }
+
+            initShaders() {
+                const gl = this.gl;
+
+                const vertexShaderSource = `
+                attribute vec2 a_position;
+                attribute vec4 a_color;
+                uniform vec2 u_resolution;
+                varying vec4 v_color;
+                void main() {
+                    vec2 clipSpace = ((a_position / u_resolution) * 2.0 - 1.0) * vec2(1, -1);
+                    gl_Position = vec4(clipSpace, 0, 1);
+                    v_color = a_color;
+                }
+            `;
+
+                const fragmentShaderSource = `
+                precision mediump float;
+                varying vec4 v_color;
+                void main() {
+                    gl_FragColor = v_color;
+                }
+            `;
+
+                const vertexShader = this.createShader(gl.VERTEX_SHADER, vertexShaderSource);
+                const fragmentShader = this.createShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+                this.program = this.createProgram(vertexShader, fragmentShader);
+
+                this.positionLocation = gl.getAttribLocation(this.program, 'a_position');
+                this.colorLocation = gl.getAttribLocation(this.program, 'a_color');
+                this.resolutionLocation = gl.getUniformLocation(this.program, 'u_resolution');
+
+                this.positionBuffer = gl.createBuffer();
+                this.colorBuffer = gl.createBuffer();
+
+                // Enable blending for transparent boxes
+                gl.enable(gl.BLEND);
+                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            }
+
+            createShader(type, source) {
+                const gl = this.gl;
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                return shader;
+            }
+
+            createProgram(vertexShader, fragmentShader) {
+                const gl = this.gl;
+                const program = gl.createProgram();
+                gl.attachShader(program, vertexShader);
+                gl.attachShader(program, fragmentShader);
+                gl.linkProgram(program);
+                return program;
+            }
+
+            render(board) {
+                const gl = this.gl;
+
+                gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+                gl.clearColor(0.1, 0.1, 0.1, 1);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+
+                gl.useProgram(this.program);
+                gl.uniform2f(this.resolutionLocation, gl.canvas.width, gl.canvas.height);
+
+                // Reset batch
+                this.rectCount = 0;
+
+                // Batch boxes
+                for (let row = 0; row < board.rows - 1; row++) {
+                    for (let col = 0; col < board.cols - 1; col++) {
+                        const owner = board.gridOwner[row][col];
+                        if (owner !== 0) {
+                            const x = col * this.spacing + this.dotSize / 2;
+                            const y = row * this.spacing + this.dotSize / 2;
+                            const color = owner === 1 ? [1, 0, 0, 0.3] : [0, 1, 0, 0.3];
+                            this.addRect(x, y, this.lineLength, this.lineLength, color);
+                        }
+                    }
+                }
+
+                // Batch horizontal lines
+                for (let row = 0; row < board.rows; row++) {
+                    for (let col = 0; col < board.cols - 1; col++) {
+                        const x = col * this.spacing + this.dotSize / 2;
+                        const y = row * this.spacing - this.lineThickness / 2;
+                        const owner = board.horizontalLines[row][col];
+                        const color = owner === 0 ? [0.3, 0.3, 0.3, 1] :
+                            owner === 1 ? [1, 0, 0, 1] :
+                                owner == 2 ? [0, 1, 0, 1] : [1, 1, 0, 1];
+                        this.addRect(x, y, this.lineLength, this.lineThickness, color);
+                    }
+                }
+
+                // Batch vertical lines
+                for (let row = 0; row < board.rows - 1; row++) {
+                    for (let col = 0; col < board.cols; col++) {
+                        const x = col * this.spacing - this.lineThickness / 2;
+                        const y = row * this.spacing + this.dotSize / 2;
+                        const owner = board.verticalLines[row][col];
+                        const color = owner === 0 ? [0.3, 0.3, 0.3, 1] :
+                            owner === 1 ? [1, 0, 0, 1] :
+                                owner == 2 ? [0, 1, 0, 1] : [1, 1, 0, 1];
+                        this.addRect(x, y, this.lineThickness, this.lineLength, color);
+                    }
+                }
+
+                // Batch dots
+                for (let row = 0; row < board.rows; row++) {
+                    for (let col = 0; col < board.cols; col++) {
+                        const x = col * this.spacing - this.dotSize / 2;
+                        const y = row * this.spacing - this.dotSize / 2;
+                        this.addRect(x, y, this.dotSize, this.dotSize, [1, 1, 1, 1]);
+                    }
+                }
+
+                // Draw all batched rectangles in one call
+                this.flushBatch();
+            }
+
+            addRect(x, y, width, height, color) {
+                const idx = this.rectCount * 12;
+                const colorIdx = this.rectCount * 24;
+
+                const x1 = x;
+                const x2 = x + width;
+                const y1 = y;
+                const y2 = y + height;
+
+                // Two triangles making a rectangle
+                this.vertices[idx] = x1;
+                this.vertices[idx + 1] = y1;
+                this.vertices[idx + 2] = x2;
+                this.vertices[idx + 3] = y1;
+                this.vertices[idx + 4] = x1;
+                this.vertices[idx + 5] = y2;
+                this.vertices[idx + 6] = x1;
+                this.vertices[idx + 7] = y2;
+                this.vertices[idx + 8] = x2;
+                this.vertices[idx + 9] = y1;
+                this.vertices[idx + 10] = x2;
+                this.vertices[idx + 11] = y2;
+
+                // Color for each vertex (6 vertices * 4 components)
+                for (let i = 0; i < 6; i++) {
+                    const offset = colorIdx + i * 4;
+                    this.colors[offset] = color[0];
+                    this.colors[offset + 1] = color[1];
+                    this.colors[offset + 2] = color[2];
+                    this.colors[offset + 3] = color[3];
+                }
+
+                this.rectCount++;
+
+                // Flush if buffer is full
+                if (this.rectCount >= this.maxRects) {
+                    this.flushBatch();
+                }
+            }
+
+            flushBatch() {
+                if (this.rectCount === 0) return;
+
+                const gl = this.gl;
+                const vertexCount = this.rectCount * 6;
+
+                // Upload position data
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, this.vertices.subarray(0, this.rectCount * 12), gl.STATIC_DRAW);
+                gl.enableVertexAttribArray(this.positionLocation);
+                gl.vertexAttribPointer(this.positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+                // Upload color data
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, this.colors.subarray(0, this.rectCount * 24), gl.STATIC_DRAW);
+                gl.enableVertexAttribArray(this.colorLocation);
+                gl.vertexAttribPointer(this.colorLocation, 4, gl.FLOAT, false, 0, 0);
+
+                // Draw all rectangles in one call
+                gl.drawArrays(gl.TRIANGLES, 0, vertexCount);
+
+                // Reset batch
+                this.rectCount = 0;
+            }
+
+            getMoveFromClick(x, y, board) {
+                const spacing = this.spacing;
+                const threshold = 25;
+
+                // Check horizontal lines
+                for (let row = 0; row < board.rows; row++) {
+                    for (let col = 0; col < board.cols - 1; col++) {
+                        const lineX = col * spacing + this.dotSize / 2;
+                        const lineY = row * spacing;
+                        const lineEndX = lineX + this.lineLength;
+
+                        if (Math.abs(y - lineY) < threshold &&
+                            x >= lineX - threshold && x <= lineEndX + threshold) {
+                            const move = new Move(row, col, true);
+                            if (board.isValidMove(move)) return move;
+
+                            const lineHitPadding = 15;
+                            let closestMove = null;
+                            let minDist = Infinity;
+                        }
+                    }
+                }
+                // // Horizontal lines
+                // for (let row = 0; row < board.rows; row++) {
+                // 	for (let col = 0; col < board.cols - 1; col++) {
+                // 		const x1 = col * spacing + this.dotSize / 2;
+                // 		const y1 = row * spacing - this.lineThickness / 2 - lineHitPadding;
+                // 		const x2 = x1 + this.lineLength;
+                // 		const y2 = row * spacing + this.lineThickness / 2 + lineHitPadding;
+
+                // 		if (x >= x1 && x <= x2 && y >= y1 && y <= y2) {
+                // 			const move = new Move(row, col, true);
+                // 			if (board.isValidMove(move)) {
+                // 				const dist = Math.abs(y - row * spacing);
+                // 				if (dist < minDist) {
+                // 					minDist = dist;
+                // 					closestMove = move;
+                // 				}
+                // 			}
+                // 		}
+                // 	}
+                // }
+
+                // Check vertical lines
+                for (let row = 0; row < board.rows - 1; row++) {
+                    for (let col = 0; col < board.cols; col++) {
+                        const lineX = col * spacing;
+                        const lineY = row * spacing + this.dotSize / 2;
+                        const lineEndY = lineY + this.lineLength;
+
+                        if (Math.abs(x - lineX) < threshold &&
+                            y >= lineY - threshold && y <= lineEndY + threshold) {
+                            const move = new Move(row, col, false);
+                            if (board.isValidMove(move)) return move;
+                        }
+                    }
+                }
+                // Vertical lines
+                // for (let row = 0; row < board.rows - 1; row++) {
+                // 	for (let col = 0; col < board.cols; col++) {
+                // 		const x1 = col * spacing - this.lineThickness / 2 - lineHitPadding;
+                // 		const y1 = row * spacing + this.dotSize / 2;
+                // 		const x2 = col * spacing + this.lineThickness / 2 + lineHitPadding;
+                // 		const y2 = y1 + this.lineLength;
+
+                // 		if (x >= x1 && x <= x2 && y >= y1 && y <= y2) {
+                // 			const move = new Move(row, col, false);
+                // 			if (board.isValidMove(move)) {
+                // 				const dist = Math.abs(x - col * spacing);
+                // 				if (dist < minDist) {
+                // 					minDist = dist;
+                // 					closestMove = move;
+                // 				}
+                // 			}
+                // 		}
+                // 	}
+                // }
+
+                return null;
+                return closestMove;
+            }
+        }
+        // Game state
+        const HUMAN = "Human";
+        const PORT = 8000;
+
+        let boardInstance;
+        let renderer;
+        let moveHistory = [];
+        let timeTaken = [];
+        let currMovePnter = -1;
+        let runningPlayBack = 0;
+        let playBackSpeed = 1;
+        let currentPlayer = 1;
+        let playerType = { 1: HUMAN, 2: HUMAN };
+        let moveResolver = null;
+        let prevMoves = [];
+        let lastPlayer = 2;
+
+        const canvas = document.getElementById('game-canvas');
+        const nextBtn = document.getElementById('nextMoveBtn');
+        const prevBtn = document.getElementById('prevMoveBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const backPlayBtn = document.getElementById('backPlayBtn');
+        const forwardPlayBtn = document.getElementById('forwardPlayBtn');
+        const resetReplayBtn = document.getElementById('resetReplayBtn');
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValue = document.getElementById('speed-value');
+        const bar = document.getElementById('progress-bar');
+        const progressContainer = document.getElementById('progress-container');
+
+        function updateScores() {
+            document.getElementById('player1-score').textContent =
+                `Player 1 (Red): ${boardInstance.scores[1]}`;
+            document.getElementById('player2-score').textContent =
+                `Player 2 (Green): ${boardInstance.scores[2]}`;
+        }
+
+        function updateTimeUI() {
+            if (currMovePnter === -1) {
+                document.getElementById('time-1').textContent = "Time Elapsed: --";
+                document.getElementById('time-2').textContent = "Time Elapsed: --";
+            } else {
+                document.getElementById('time-1').textContent =
+                    `Time Elapsed: ${timeTaken[currMovePnter][0]}`;
+                document.getElementById('time-2').textContent =
+                    `Time Elapsed: ${timeTaken[currMovePnter][1]}`;
+            }
+        }
+
+        function waitForHumanMove() {
+            return new Promise((resolve) => {
+                if (currentPlayer === 1)
+                    timeTaken.push(["--", (timeTaken.length > 0) ? (timeTaken[timeTaken.length - 1][1]) : ("--")]);
+                else timeTaken.push([(timeTaken.length > 0) ? (timeTaken[timeTaken.length - 1][0]) : ("--"), "--"]);
+                moveResolver = resolve;
+            });
+        }
+
+        function getMoveFromAPI(playerNum) {
+            let passMoves = [];
+            if (lastPlayer != playerNum) passMoves = prevMoves;
+            return fetch(`http://localhost:${PORT}/move-bot`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    playerID: playerNum,
+                    previousMoves: prevMoves,
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (currentPlayer === 1)
+                        timeTaken.push([data.time, (timeTaken.length > 0) ? (timeTaken[timeTaken.length - 1][1]) : ("--")]);
+                    else timeTaken.push([(timeTaken.length > 0) ? (timeTaken[timeTaken.length - 1][0]) : ("--"), data.time]);
+                    return new Move(data.row, data.col, data.isHorizontal);
+                });
+        }
+
+        canvas.addEventListener('click', (e) => {
+            if (!moveResolver) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const move = renderer.getMoveFromClick(x, y, boardInstance);
+            if (move && moveResolver) {
+                const resolver = moveResolver;
+                moveResolver = null;
+                resolver(move);
+            }
+        });
+
+        async function mainLoop() {
+            while (!boardInstance.isCompleted()) {
+                let move;
+                if (playerType[currentPlayer] === HUMAN) {
+                    move = await waitForHumanMove();
+                } else {
+                    move = await getMoveFromAPI(currentPlayer);
+                }
+
+                move.setPlayer(currentPlayer);
+                if (!boardInstance.makeMove(move, currentPlayer)) {
+                    continue;
+                }
+
+                if (lastPlayer != currentPlayer) {
+                    prevMoves = [];
+                }
+                lastPlayer = currentPlayer;
+                prevMoves.push([move.row, move.col, move.isHorizontal]);
+
+                moveHistory.push(move);
+                currMovePnter++;
+
+                renderer.render(boardInstance);
+                updateScores();
+                updateTimeUI();
+
+                boardInstance.nextMove(moveHistory[currMovePnter]);
+
+                const capturedGrids = getCapturingGrids(boardInstance, move);
+                if (capturedGrids.length === 0) {
+                    currentPlayer = currentPlayer === 1 ? 2 : 1;
+                }
+            }
+
+            prevBtn.disabled = false;
+            nextBtn.disabled = false;
+            pauseBtn.disabled = false;
+            forwardPlayBtn.disabled = false;
+            backPlayBtn.disabled = false;
+            resetReplayBtn.disabled = false;
+            // document.getElementById('time-1').hidden = false;
+            // document.getElementById('time-2').hidden = false;
+        }
+
+        function moveToNextMove() {
+            if (currMovePnter === moveHistory.length - 1) return;
+
+            currMovePnter++;
+            updateTimeUI();
+            boardInstance.nextMove(moveHistory[currMovePnter]);
+            renderer.render(boardInstance);
+            updateScores();
+        }
+
+        function moveToPrevMove() {
+            if (currMovePnter === -1) return;
+
+            boardInstance.prevMove(moveHistory[currMovePnter]);
+            currMovePnter--;
+            updateTimeUI();
+            renderer.render(boardInstance);
+            updateScores();
+        }
+
+        async function runForwardPlay() {
+            while (runningPlayBack === 1 && currMovePnter < moveHistory.length - 1) {
+                moveToNextMove();
+                await new Promise(resolve => setTimeout(resolve, 500 / playBackSpeed));
+            }
+            if (currMovePnter === moveHistory.length - 1) runningPlayBack = 0;
+        }
+
+        async function runBackPlay() {
+            while (runningPlayBack === -1 && currMovePnter >= 0) {
+                moveToPrevMove();
+                await new Promise(resolve => setTimeout(resolve, 500 / playBackSpeed));
+            }
+            if (currMovePnter < 0) runningPlayBack = 0;
+        }
+        function resetReplay() {
+            runningPlayBack = 0; // Stop any playback
+            while (currMovePnter > -1) {
+                moveToPrevMove();
+            }
+
+            // Reset UI to start
+            // document.getElementById('move-time').textContent = "Move Time: --";
+            // renderer.render(boardInstance);
+            // updateScores();
+        }
+        async function loadOptions() {
+            const dropdown1 = document.getElementById("player1-type");
+            const dropdown2 = document.getElementById("player2-type");
+            try {
+                const response = await fetch(`http://localhost:${PORT}/all-agents`);
+                if (!response.ok) throw new Error("Network error");
+                const options = await response.json();
+
+                dropdown1.innerHTML = `<option value="${HUMAN}" selected>Human</option>`;
+                dropdown2.innerHTML = `<option value="${HUMAN}" selected>Human</option>`;
+
+                options.forEach(option => {
+                    const opt1 = document.createElement("option");
+                    opt1.value = option;
+                    opt1.textContent = option;
+                    const opt2 = document.createElement("option");
+                    opt2.value = option;
+                    opt2.textContent = option;
+                    dropdown1.appendChild(opt1);
+                    dropdown2.appendChild(opt2);
+                });
+            } catch (error) {
+                dropdown1.innerHTML = '<option value="">Failed to load options</option>';
+                dropdown2.innerHTML = '<option value="">Failed to load options</option>';
+                console.error("Error loading options:", error);
+            }
+        }
+
+        nextBtn.addEventListener('click', moveToNextMove);
+        prevBtn.addEventListener('click', moveToPrevMove);
+        pauseBtn.addEventListener('click', () => { runningPlayBack = 0; });
+        forwardPlayBtn.addEventListener('click', () => { runningPlayBack = 1; runForwardPlay(); });
+        backPlayBtn.addEventListener('click', () => { runningPlayBack = -1; runBackPlay(); });
+        resetReplayBtn.addEventListener('click', resetReplay);
+        speedSlider.addEventListener('input', function () {
+            playBackSpeed = parseFloat(this.value);
+            speedValue.textContent = playBackSpeed + 'x';
+        });
+
+        window.addEventListener("DOMContentLoaded", loadOptions);
+
+        const toggle = document.getElementById('toggle');
+        let isRandomOn = false; // state variable
+
+        toggle.addEventListener('click', () => {
+            isRandomOn = !isRandomOn;
+            toggle.classList.toggle('active');
+            console.log("Toggle is now:", isRandomOn ? "ON" : "OFF");
+        });
+
+        document.getElementById('start-btn').addEventListener('click', () => {
+            playerType[1] = document.getElementById('player1-type').value;
+            playerType[2] = document.getElementById('player2-type').value;
+
+            // *** MODIFIED SECTION START ***
+            const numRows = parseInt(document.getElementById('board-rows').value);
+            const numCols = parseInt(document.getElementById('board-cols').value);
+
+            // boardInstance uses dot count, so add 1 to box count
+            boardInstance = new Board(numRows + 1, numCols + 1);
+            if (isRandomOn)
+                boardInstance.fillRandomLines();
+
+            // Canvas size is based on the number of boxes (numRows/numCols) * spacing
+            const boardWidth = numCols * 68;
+            const boardHeight = numRows * 68;
+            // *** MODIFIED SECTION END ***
+
+            canvas.width = boardWidth;
+            canvas.height = boardHeight;
+
+            renderer = new WebGLRenderer(canvas);
+
+            // *** ADDED THIS LINE ***
+            progressContainer.style.display = 'block'; // Show the progress bar
+            bar.style.width = '0%';
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                if (progress < 90) {
+                    progress += Math.random() * 10;
+                    bar.style.width = progress + '%';
+                }
+            }, 200);
+
+            fetch(`http://localhost:${PORT}/start-game`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    bot1: playerType[1],
+                    bot2: playerType[2],
+                    board: {
+                        rows: boardInstance.rows,
+                        cols: boardInstance.cols,
+                        horizontalLines: boardInstance.horizontalLines,
+                        verticalLines: boardInstance.verticalLines,
+                        gridOwner: boardInstance.gridOwner
+                    }
+                })
+            }).then(() => {
+                clearInterval(interval);
+                bar.style.width = '100%';
+                document.getElementById('setup-controls').style.display = 'none';
+                setTimeout(() => {
+                    bar.style.width = '0%';
+                    progressContainer.style.display = 'none';
+                    document.getElementById('gamePlay').style.display = 'flex';
+                    nextBtn.disabled = true;
+                    prevBtn.disabled = true;
+                    pauseBtn.disabled = true;
+                    forwardPlayBtn.disabled = true;
+                    backPlayBtn.disabled = true;
+                    resetReplayBtn.disabled = true;
+                    renderer.render(boardInstance);
+                    updateScores();
+                    mainLoop();
+                }, 1000);
+
+            });
+        });
+    </script>
+</body>
+
+</html>

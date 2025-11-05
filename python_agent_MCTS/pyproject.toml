@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dots-python-agent"
+version = "0.1.0"
+description = "Python starter agent for the dots game"
+authors = [{ name = "Starter" }]
+requires-python = ">=3.10"
+
+[project.scripts]
+dots-python-agent = "python_agent.__main__:main"

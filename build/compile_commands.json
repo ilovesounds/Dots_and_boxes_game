@@ -1,0 +1,42 @@
+[
+{
+  "directory": "C:/Users/Soham/Downloads/starter-code/starter-code/build",
+  "command": "C:\\MinGW\\bin\\g++.exe  @CMakeFiles/agent.dir/includes_CXX.rsp -g -o CMakeFiles\\agent.dir\\src\\submission\\agent.cpp.obj -c C:\\Users\\Soham\\Downloads\\starter-code\\starter-code\\cpp_agent\\src\\submission\\agent.cpp",
+  "file": "C:/Users/Soham/Downloads/starter-code/starter-code/cpp_agent/src/submission/agent.cpp"
+},
+{
+  "directory": "C:/Users/Soham/Downloads/starter-code/starter-code/build",
+  "command": "C:\\MinGW\\bin\\g++.exe  @CMakeFiles/agent.dir/includes_CXX.rsp -g -o CMakeFiles\\agent.dir\\src\\controller.cpp.obj -c C:\\Users\\Soham\\Downloads\\starter-code\\starter-code\\cpp_agent\\src\\controller.cpp",
+  "file": "C:/Users/Soham/Downloads/starter-code/starter-code/cpp_agent/src/controller.cpp"
+},
+{
+  "directory": "C:/Users/Soham/Downloads/starter-code/starter-code/build",
+  "command": "C:\\MinGW\\bin\\g++.exe  @CMakeFiles/agent.dir/includes_CXX.rsp -g -o CMakeFiles\\agent.dir\\src\\run.cpp.obj -c C:\\Users\\Soham\\Downloads\\starter-code\\starter-code\\cpp_agent\\src\\run.cpp",
+  "file": "C:/Users/Soham/Downloads/starter-code/starter-code/cpp_agent/src/run.cpp"
+},
+{
+  "directory": "C:/Users/Soham/Downloads/starter-code/starter-code/build/cpp_board_lib",
+  "command": "C:\\MinGW\\bin\\g++.exe  @CMakeFiles/board_lib.dir/includes_CXX.rsp -g -o CMakeFiles\\board_lib.dir\\src\\lib\\board.cpp.obj -c C:\\Users\\Soham\\Downloads\\starter-code\\starter-code\\cpp_agent\\cpp_board_lib\\src\\lib\\board.cpp",
+  "file": "C:/Users/Soham/Downloads/starter-code/starter-code/cpp_agent/cpp_board_lib/src/lib/board.cpp"
+},
+{
+  "directory": "C:/Users/Soham/Downloads/starter-code/starter-code/build/cpp_board_lib",
+  "command": "C:\\MinGW\\bin\\g++.exe  @CMakeFiles/board_lib.dir/includes_CXX.rsp -g -o CMakeFiles\\board_lib.dir\\src\\lib\\utils.cpp.obj -c C:\\Users\\Soham\\Downloads\\starter-code\\starter-code\\cpp_agent\\cpp_board_lib\\src\\lib\\utils.cpp",
+  "file": "C:/Users/Soham/Downloads/starter-code/starter-code/cpp_agent/cpp_board_lib/src/lib/utils.cpp"
+},
+{
+  "directory": "C:/Users/Soham/Downloads/starter-code/starter-code/build/cpp_board_lib",
+  "command": "C:\\MinGW\\bin\\g++.exe  @CMakeFiles/board_lib_test.dir/includes_CXX.rsp -g -o CMakeFiles\\board_lib_test.dir\\src\\tests\\board_test.cpp.obj -c C:\\Users\\Soham\\Downloads\\starter-code\\starter-code\\cpp_agent\\cpp_board_lib\\src\\tests\\board_test.cpp",
+  "file": "C:/Users/Soham/Downloads/starter-code/starter-code/cpp_agent/cpp_board_lib/src/tests/board_test.cpp"
+},
+{
+  "directory": "C:/Users/Soham/Downloads/starter-code/starter-code/build/cpp_board_lib",
+  "command": "C:\\MinGW\\bin\\g++.exe  @CMakeFiles/board_lib_test.dir/includes_CXX.rsp -g -o CMakeFiles\\board_lib_test.dir\\src\\lib\\board.cpp.obj -c C:\\Users\\Soham\\Downloads\\starter-code\\starter-code\\cpp_agent\\cpp_board_lib\\src\\lib\\board.cpp",
+  "file": "C:/Users/Soham/Downloads/starter-code/starter-code/cpp_agent/cpp_board_lib/src/lib/board.cpp"
+},
+{
+  "directory": "C:/Users/Soham/Downloads/starter-code/starter-code/build/cpp_board_lib",
+  "command": "C:\\MinGW\\bin\\g++.exe  @CMakeFiles/board_lib_test.dir/includes_CXX.rsp -g -o CMakeFiles\\board_lib_test.dir\\src\\lib\\utils.cpp.obj -c C:\\Users\\Soham\\Downloads\\starter-code\\starter-code\\cpp_agent\\cpp_board_lib\\src\\lib\\utils.cpp",
+  "file": "C:/Users/Soham/Downloads/starter-code/starter-code/cpp_agent/cpp_board_lib/src/lib/utils.cpp"
+}
+]
